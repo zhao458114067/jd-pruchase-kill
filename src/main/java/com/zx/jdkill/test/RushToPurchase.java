@@ -79,23 +79,43 @@ public class RushToPurchase implements Runnable {
                 if (Start.ok < 2) {
                     submitOrder = HttpUrlConnectionUtil.post(headers, "https://trade.jd.com/shopping/order/submitOrder.action", null);
                 } else {
-                    System.out.println("已抢购两件，请尽快完成付款");
+                    System.out.println("已抢购" + Start.ok + "件，请尽快完成付款");
                     break;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (submitOrder.contains("获取用户订单信息失败") || "".equals(submitOrder)) {
-                System.out.println("获取用户订单信息失败");
-            } else if (submitOrder.contains("很遗憾没有抢到")) {
-                System.out.println("很遗憾没有抢到，再接再厉哦");
-            } else if (submitOrder.contains("抱歉，您提交过快，请稍后再提交订单！")) {
-                System.out.println("抱歉，您提交过快，请稍后再提交订单！");
-            } else if (submitOrder.contains("系统正在开小差，请重试~~")) {
-                System.out.println("系统正在开小差，请重试~~");
-            } else {
+            if (submitOrder.contains("刷新太频繁了") || submitOrder.contains("抱歉，您访问的内容不存在")) {
+                System.out.println("刷新太频繁了,您访问的内容不存在");
+                continue;
+            }
+            JSONObject jsonObject = JSONObject.parseObject(submitOrder);
+            String success = null;
+            String message = null;
+            if (jsonObject != null && jsonObject.get("success") != null) {
+                success = jsonObject.get("success").toString();
+            }
+            if (jsonObject != null && jsonObject.get("message") != null) {
+                message = jsonObject.get("message").toString();
+            }
+
+            if (success == "true") {
                 System.out.println("抢购成功，请尽快完成付款");
                 Start.ok++;
+            } else {
+                if (message != null) {
+                    System.out.println(message);
+                } else if (submitOrder.contains("很遗憾没有抢到")) {
+                    System.out.println("很遗憾没有抢到，再接再厉哦");
+                } else if (submitOrder.contains("抱歉，您提交过快，请稍后再提交订单！")) {
+                    System.out.println("抱歉，您提交过快，请稍后再提交订单！");
+                } else if (submitOrder.contains("系统正在开小差，请重试~~")) {
+                    System.out.println("系统正在开小差，请重试~~");
+                } else if (submitOrder.contains("您多次提交过快")) {
+                    System.out.println("您多次提交过快，请稍后再试");
+                } else {
+                    System.out.println("获取用户订单信息失败");
+                }
             }
         }
     }
