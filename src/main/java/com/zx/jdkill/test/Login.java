@@ -28,10 +28,11 @@ public class Login {
         headers.put(Start.headerAgent, Start.headerAgentArg);
         headers.put(Start.Referer, Start.RefererArg);
         //获取二维码
-        HttpUrlConnectionUtil.getQCode(headers, "https://qr.m.jd.com/show?appid=133&size=147&t=1609856264450?appid=133&size=147&t=\" + System.currentTimeMillis()");
+        Long now = System.currentTimeMillis();
+        HttpUrlConnectionUtil.getQCode(headers, "https://qr.m.jd.com/show?appid=133&size=147&t=" + now);
         //打开二维码
         Runtime.getRuntime().exec("cmd /c QCode.png");
-        URI url = new URI("https://qr.m.jd.com/show?appid=133&size=147&t=1609856264450");
+        URI url = new URI("https://qr.m.jd.com/show?appid=133&size=147&t=" + now);
         Map<String, List<String>> stringListMap = new HashMap<String, List<String>>();
         stringListMap = Start.manager.get(url, requestHeaders);
         List cookieList = stringListMap.get("Cookie");
