@@ -21,7 +21,10 @@ public class RushToPurchase implements Runnable {
 
     public void run() {
         JSONObject headers = new JSONObject();
-        while (Start.ok != 2) {
+        while (times < Start.ok) {
+            //获取ip，使用的是免费的 携趣代理 ，不需要或者不会用可以注释掉
+            setIpProxy();
+
             headers.put(Start.headerAgent, Start.headerAgentArg);
             headers.put(Start.Referer, Start.RefererArg);
             //抢购
@@ -76,7 +79,7 @@ public class RushToPurchase implements Runnable {
             headers.put("Cookie", cookie.get(0).toString());
             String submitOrder = null;
             try {
-                if (Start.ok < 2) {
+                if (times < Start.ok) {
                     submitOrder = HttpUrlConnectionUtil.post(headers, "https://trade.jd.com/shopping/order/submitOrder.action", null);
                 } else {
                     System.out.println("已抢购" + Start.ok + "件，请尽快完成付款");
@@ -101,7 +104,7 @@ public class RushToPurchase implements Runnable {
 
             if (success == "true") {
                 System.out.println("抢购成功，请尽快完成付款");
-                Start.ok++;
+                times++;
             } else {
                 if (message != null) {
                     System.out.println(message);
@@ -118,5 +121,19 @@ public class RushToPurchase implements Runnable {
                 }
             }
         }
+    }
+
+    public static void setIpProxy() {
+        String ip = null;
+        try {
+            ip = HttpUrlConnectionUtil.ips().get(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String[] r1 = ip.split(":");
+        System.out.println(ip);
+        System.getProperties().setProperty("http.proxyHost", r1[0]);
+        System.getProperties().setProperty("http.proxyPort", r1[1]);
+        System.err.println(r1[0] + ":" + r1[1]);
     }
 }

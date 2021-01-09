@@ -2,12 +2,13 @@ package com.zx.jdkill.test;
 
 import com.alibaba.fastjson.JSONObject;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -123,4 +124,76 @@ public class HttpUrlConnectionUtil {
         }
         return response;
     }
+
+    /**
+     * date字符串转时间戳
+     *
+     * @param date
+     * @return
+     */
+    public static Long dateToTime(String date) throws ParseException {
+        SimpleDateFormat sdfTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date data = sdfTime.parse(date);
+        Long time = data.getTime();
+        return time;
+    }
+
+    /**
+     * time时间戳转Date
+     *
+     * @param time
+     * @return
+     */
+    public static Date timeToDate(String time) {
+        SimpleDateFormat sdfTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String str = sdfTime.format(Long.valueOf(time));
+        try {
+            Date date = sdfTime.parse(str);
+            return date;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static ArrayList<String> ips() throws IOException {
+        String path = "http://api.xiequ.cn/VAD/GetIp.aspx?act=get&num=1&time=30&plat=1&re=0&type=0&so=1&ow=1&spl=1&addr=&db=1";// 要获得html页面内容的地址
+
+        URL url = new URL(path);// 创建url对象
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();// 打开连接
+        conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
+        conn.setRequestProperty("contentType", "GBK"); // 设置url中文参数编码
+
+        conn.setConnectTimeout(5 * 1000);// 请求的时间
+
+        conn.setRequestMethod("GET");// 请求方式
+
+        InputStream inStream = conn.getInputStream();
+        // readLesoSysXML(inStream);
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(inStream, "GBK"));
+        StringBuffer buffer = new StringBuffer();
+        ArrayList<String> ipp = new ArrayList<String>();
+        String line = "";
+        // 读取获取到内容的最后一行,写入
+        while ((line = in.readLine()) != null) {
+            buffer.append(line);
+            ipp.add(line);
+            System.out.println(line);
+        }
+        String str = buffer.toString();
+//    JSONObject json1 = JSONObject.parseObject(str);
+//    JSONArray jsons =  JSONArray.parseArray(json1.get("data").toString());
+
+//    for(Object json:jsons){
+//        JSONObject ips = JSONObject.parseObject(json.toString());
+//        String ip = ips.get("IP").toString();
+//        System.out.println(ip);
+//        ipp.add(ip);
+//    }
+        return ipp;
+
+    }
+
 }
