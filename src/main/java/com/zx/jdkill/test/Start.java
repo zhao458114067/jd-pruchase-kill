@@ -3,7 +3,10 @@ package com.zx.jdkill.test;
 import com.alibaba.fastjson.JSONObject;
 import com.sun.webkit.network.CookieManager;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.CookieHandler;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -22,18 +25,22 @@ public class Start {
     final static String Referer = "Referer";
     final static String RefererArg = "https://passport.jd.com/new/login.aspx";
     //商品id
-    static String pid = "30425081079";
+    static String pid = "";
     //eid
-    static String eid = "W2HEXZSRULGOBXAMFF6J44UTIGCP5QGKRQO5M7KZHYUAU7RT2JBTXRG2ZNRUWHKYX2PHNKRJI2KOM7BZIZ2V3F3C64";
+    static String eid = "";
     //fp
-    static String fp = "4ce08fcab2f99f47724c9c7cdf771d9f";
+    static String fp = "";
     //抢购数量
     volatile static Integer ok = 2;
-
+    //获取ip代理
+    static String getIpUrl = "";
+    //白名单
+    static String whiteIp = "";
     static CookieManager manager = new CookieManager();
 
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException, ParseException {
+        initData();
         CookieHandler.setDefault(manager);
         //获取venderId
 //        String shopDetail = util.get(null, "https://item.jd.com/" + RushToPurchase.pid + ".html");
@@ -50,6 +57,22 @@ public class Start {
             threadPoolExecutor.execute(new RushToPurchase());
         }
         new RushToPurchase().run();
+    }
+
+    public static void initData() throws IOException {
+        String fileData = readFile("initData.txt").toString();
+        try {
+            pid = fileData.split("pid=")[1].split(";")[0];
+            eid = fileData.split("eid=")[1].split(";")[0];
+            fp = fileData.split("fp=")[1].split(";")[0];
+            ok = Integer.valueOf(fileData.split("ok=")[1].split(";")[0]);
+            getIpUrl = fileData.split("getIpUrl=")[1].split(";")[0];
+            whiteIp = fileData.split("whiteIp=")[1].split(";")[0];
+            HttpUrlConnectionUtil.ips(getIpUrl);
+        } catch (Exception e) {
+            System.out.println("参数错误，每个参数后面需要加分号");
+        }
+
     }
 
     public static void judgePruchase() throws IOException, ParseException, InterruptedException {
@@ -75,5 +98,23 @@ public class Start {
                 }
             }
         }
+    }
+
+    /**
+     * 按行读取全部文件数据
+     *
+     * @param strFile
+     */
+    public static StringBuffer readFile(String strFile) throws IOException {
+        StringBuffer strSb = new StringBuffer();
+        InputStreamReader inStrR = new InputStreamReader(new FileInputStream(strFile), "UTF-8");
+        // character streams
+        BufferedReader br = new BufferedReader(inStrR);
+        String line = br.readLine();
+        while (line != null) {
+            strSb.append(line).append("\r\n");
+            line = br.readLine();
+        }
+        return strSb;
     }
 }
