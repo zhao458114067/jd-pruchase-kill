@@ -16,6 +16,8 @@ import java.util.Iterator;
  * @date: 2021/1/5 22:26
  */
 public class HttpUrlConnectionUtil {
+    static ArrayList<String> ips = new ArrayList();
+
     /**
      * get请求
      *
@@ -156,8 +158,11 @@ public class HttpUrlConnectionUtil {
         return null;
     }
 
-    public static ArrayList<String> ips() throws IOException {
-        String path = "http://api.xiequ.cn/VAD/GetIp.aspx?act=get&num=1&time=30&plat=1&re=0&type=0&so=1&ow=1&spl=1&addr=&db=1";// 要获得html页面内容的地址
+    public static ArrayList<String> ips(String getIpUrl) throws IOException {
+        if ("".equals(getIpUrl)) {
+            return ips;
+        }
+        String path = getIpUrl;// 要获得html页面内容的地址
 
         URL url = new URL(path);// 创建url对象
 
@@ -180,7 +185,6 @@ public class HttpUrlConnectionUtil {
         while ((line = in.readLine()) != null) {
             buffer.append(line);
             ipp.add(line);
-            System.out.println(line);
         }
         String str = buffer.toString();
 //    JSONObject json1 = JSONObject.parseObject(str);
@@ -192,6 +196,7 @@ public class HttpUrlConnectionUtil {
 //        System.out.println(ip);
 //        ipp.add(ip);
 //    }
+        ips = ipp;
         return ipp;
 
     }

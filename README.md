@@ -4,6 +4,7 @@
  
  Start.class是程序入口
  
+ **配置文件initData.txt文件必须与.exe文件或者项目在同一目录下**
  
 ### 需要设置
  

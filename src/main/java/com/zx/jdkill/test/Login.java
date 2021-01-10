@@ -54,7 +54,7 @@ public class Login {
                 close();
                 break;
             }
-            Thread.sleep(3000);
+            Thread.sleep(1000);
         }
         //验证，获取cookie
         String qrCodeTicketValidation = HttpUrlConnectionUtil.get(headers, "https://passport.jd.com/uc/qrCodeTicketValidation?t=" + ticket);
