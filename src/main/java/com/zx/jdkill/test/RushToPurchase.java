@@ -18,7 +18,6 @@ import java.util.Map;
  */
 public class RushToPurchase implements Runnable {
     //请求头
-    volatile static Integer times = 0;
     static Map<String, List<String>> stringListMap = new HashMap<String, List<String>>();
 
     public void run() {
@@ -34,10 +33,10 @@ public class RushToPurchase implements Runnable {
             String gate = null;
             List<String> cookie = new ArrayList<>();
             try {
-                synchronized (times) {
-                    if (times < Start.ok) {
+                synchronized (Start.wait) {
+                    if (Start.times < Start.ok) {
                         gate = HttpUrlConnectionUtil.get(headers, "https://cart.jd.com/gate.action?pcount=1&ptype=1&pid=" + Start.pid);
-                        times++;
+                        Start.times++;
                         continue;
                     }
                 }
@@ -90,7 +89,7 @@ public class RushToPurchase implements Runnable {
             headers.put("Cookie", cookie.get(0).toString());
             String submitOrder = null;
             try {
-                if (times >= Start.ok) {
+                if (Start.times >= Start.ok) {
                     submitOrder = HttpUrlConnectionUtil.post(headers, "https://trade.jd.com/shopping/order/submitOrder.action", null);
                 }
             } catch (IOException e) {
@@ -101,8 +100,8 @@ public class RushToPurchase implements Runnable {
                 continue;
             }
             JSONObject jsonObject = JSONObject.parseObject(submitOrder);
-            String success = null;
-            String message = null;
+            String success = "";
+            String message = "";
             if (jsonObject != null && jsonObject.get("success") != null) {
                 success = jsonObject.get("success").toString();
             }
@@ -110,8 +109,13 @@ public class RushToPurchase implements Runnable {
                 message = jsonObject.get("message").toString();
             }
 
-            if ("true".equals(success)) {
-                System.out.println("已抢购" + times + "件，请尽快完成付款");
+            if (Start.times >= Start.ok || "true".equals(success)) {
+                System.out.println("已抢购" + Start.times + "件，请尽快完成付款");
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             } else {
                 if (message != null) {
                     System.out.println(message);
