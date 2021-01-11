@@ -19,6 +19,8 @@ import java.util.Map;
 public class RushToPurchase implements Runnable {
     //请求头
     static Map<String, List<String>> stringListMap = new HashMap<String, List<String>>();
+    volatile static Integer times = 0;
+    Boolean purchase = false;
 
     public void run() {
         JSONObject headers = new JSONObject();
@@ -33,10 +35,10 @@ public class RushToPurchase implements Runnable {
             String gate = null;
             List<String> cookie = new ArrayList<>();
             try {
-                synchronized (Start.wait) {
-                    if (Start.times < Start.ok) {
+                synchronized (RushToPurchase.times) {
+                    if (times < 2) {
                         gate = HttpUrlConnectionUtil.get(headers, "https://cart.jd.com/gate.action?pcount=1&ptype=1&pid=" + Start.pid);
-                        Start.times++;
+                        times++;
                         continue;
                     }
                 }
@@ -89,7 +91,7 @@ public class RushToPurchase implements Runnable {
             headers.put("Cookie", cookie.get(0).toString());
             String submitOrder = null;
             try {
-                if (Start.times >= Start.ok) {
+                if (times >= Start.ok) {
                     submitOrder = HttpUrlConnectionUtil.post(headers, "https://trade.jd.com/shopping/order/submitOrder.action", null);
                 }
             } catch (IOException e) {
@@ -102,17 +104,16 @@ public class RushToPurchase implements Runnable {
             JSONObject jsonObject = JSONObject.parseObject(submitOrder);
             String success = "";
             String message = "";
-            if (jsonObject != null && jsonObject.get("success") != null) {
+            if (jsonObject != null && jsonObject.get("success") != null && !"true".equals(jsonObject.get("success").toString())) {
                 success = jsonObject.get("success").toString();
             }
             if (jsonObject != null && jsonObject.get("message") != null) {
                 message = jsonObject.get("message").toString();
             }
-
-            if (Start.times >= Start.ok || "true".equals(success)) {
-                System.out.println("已抢购" + Start.times + "件，请尽快完成付款");
+            if ("true".equals(success) || times >= Start.ok) {
+                System.out.println("已抢购" + times + "件，请尽快完成付款");
                 try {
-                    wait();
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
