@@ -91,7 +91,7 @@ public class Start {
                 Long serverTime = Long.valueOf(jdTime.get("serverTime").toString());
                 if (startTime >= serverTime) {
                     System.out.println("正在等待抢购时间");
-                    Thread.sleep(300);
+                    Thread.sleep(100);
                 } else {
                     break;
                 }

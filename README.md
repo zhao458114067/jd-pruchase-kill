@@ -2,7 +2,7 @@
 
 ### 扫码登陆
  
- Start.class是程序入口
+ Start.class是程序入口,exe运行必须要有jre1.8运行环境
  
  **配置文件initData.txt文件必须与.exe文件或者项目在同一目录下**
  
