@@ -31,15 +31,12 @@ public class Start {
     //fp
     static String fp = "";
     //抢购数量
-    volatile static Integer ok = 2;
-    //当前次数
-    public volatile static Integer times = 0;
+    static Integer ok = 2;
     //获取ip代理
     static String getIpUrl = "";
     //白名单
     static String whiteIp = "";
     static CookieManager manager = new CookieManager();
-    public static Integer wait = 0;
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException, ParseException {
         initData();
@@ -54,8 +51,8 @@ public class Start {
         //判断是否开始抢购
         judgePruchase();
         //开始抢购
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(3, 5, 1000, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>(), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
-        for (int i = 0; i < 5; i++) {
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(15, 20, 1000, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>(), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
+        for (int i = 0; i < 15; i++) {
             threadPoolExecutor.execute(new RushToPurchase());
         }
         new RushToPurchase().run();
