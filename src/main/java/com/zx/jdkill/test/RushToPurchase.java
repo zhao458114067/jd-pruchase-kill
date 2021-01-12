@@ -20,13 +20,13 @@ public class RushToPurchase implements Runnable {
     //请求头
     static Map<String, List<String>> stringListMap = new HashMap<String, List<String>>();
     volatile static Integer times = 0;
-    Boolean purchase = false;
+    volatile static Boolean purchase = true;
 
     public void run() {
         JSONObject headers = new JSONObject();
         headers.put(Start.headerAgent, Start.headerAgentArg);
         headers.put(Start.Referer, Start.RefererArg);
-        while (true) {
+        while (purchase) {
             //获取ip，使用的是免费的 携趣代理 ，不需要或者不会用可以注释掉
             if (!"".equals(Start.getIpUrl)) {
                 setIpProxy();
@@ -35,24 +35,29 @@ public class RushToPurchase implements Runnable {
             String gate = null;
             List<String> cookie = new ArrayList<>();
             try {
-                synchronized (RushToPurchase.times) {
-                    if (times < 2) {
+                synchronized (times) {
+                    if (times < Start.ok) {
                         gate = HttpUrlConnectionUtil.get(headers, "https://cart.jd.com/gate.action?pcount=1&ptype=1&pid=" + Start.pid);
-                        times++;
-                        continue;
+                        if (!gate.contains("商品已成功加入")) {
+                            System.out.println("获取商品信息失败");
+                            continue;
+                        } else {
+                            times++;
+                            continue;
+                        }
                     }
                 }
             } catch (IOException e) {
             }
-            //订单信息
-            stringListMap.clear();
-            try {
-                stringListMap = Start.manager.get(new URI("https://trade.jd.com/shopping/order/getOrderInfo.action"), stringListMap);
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-            cookie = stringListMap.get("Cookie");
-            headers.put("Cookie", cookie.get(0).toString());
+//            //订单信息
+//            stringListMap.clear();
+//            try {
+//                stringListMap = Start.manager.get(new URI("https://trade.jd.com/shopping/order/getOrderInfo.action"), stringListMap);
+//            } catch (URISyntaxException e) {
+//                e.printStackTrace();
+//            }
+//            cookie = stringListMap.get("Cookie");
+//            headers.put("Cookie", cookie.get(0).toString());
             try {
                 String orderInfo = HttpUrlConnectionUtil.get(headers, "https://trade.jd.com/shopping/order/getOrderInfo.action");
             } catch (IOException e) {
@@ -102,34 +107,32 @@ public class RushToPurchase implements Runnable {
                 continue;
             }
             JSONObject jsonObject = JSONObject.parseObject(submitOrder);
-            String success = "";
-            String message = "";
-            if (jsonObject != null && jsonObject.get("success") != null && !"true".equals(jsonObject.get("success").toString())) {
+            String success = null;
+            String message = null;
+            if (jsonObject != null && jsonObject.get("success") != null) {
                 success = jsonObject.get("success").toString();
             }
             if (jsonObject != null && jsonObject.get("message") != null) {
                 message = jsonObject.get("message").toString();
             }
-            if ("true".equals(success) || times >= Start.ok) {
-                System.out.println("已抢购" + times + "件，请尽快完成付款");
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                if (message != null) {
-                    System.out.println(message);
-                } else if (submitOrder.contains("很遗憾没有抢到")) {
-                    System.out.println("很遗憾没有抢到，再接再厉哦");
-                } else if (submitOrder.contains("抱歉，您提交过快，请稍后再提交订单！")) {
-                    System.out.println("抱歉，您提交过快，请稍后再提交订单！");
-                } else if (submitOrder.contains("系统正在开小差，请重试~~")) {
-                    System.out.println("系统正在开小差，请重试~~");
-                } else if (submitOrder.contains("您多次提交过快")) {
-                    System.out.println("您多次提交过快，请稍后再试");
+            if (times >= Start.ok) {
+                if ("true".equals(success)) {
+                    System.out.println("已成功抢购" + times + "件，请尽快完成付款");
+                    purchase = false;
                 } else {
-                    System.out.println("获取用户订单信息失败");
+                    if (message != null) {
+                        System.out.println(message);
+                    } else if (submitOrder.contains("很遗憾没有抢到")) {
+                        System.out.println("很遗憾没有抢到，再接再厉哦");
+                    } else if (submitOrder.contains("抱歉，您提交过快，请稍后再提交订单！")) {
+                        System.out.println("抱歉，您提交过快，请稍后再提交订单！");
+                    } else if (submitOrder.contains("系统正在开小差，请重试~~")) {
+                        System.out.println("系统正在开小差，请重试~~");
+                    } else if (submitOrder.contains("您多次提交过快")) {
+                        System.out.println("您多次提交过快，请稍后再试");
+                    } else {
+                        System.out.println("获取用户订单信息失败");
+                    }
                 }
             }
         }
