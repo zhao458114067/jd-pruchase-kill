@@ -34,8 +34,7 @@ public class Start {
     static Integer ok = 2;
     //获取ip代理
     static String getIpUrl = "";
-    //白名单
-    static String whiteIp = "";
+
     static CookieManager manager = new CookieManager();
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException, ParseException {
@@ -66,7 +65,6 @@ public class Start {
             fp = fileData.split("fp=")[1].split(";")[0];
             ok = Integer.valueOf(fileData.split("ok=")[1].split(";")[0]);
             getIpUrl = fileData.split("getIpUrl=")[1].split(";")[0];
-            whiteIp = fileData.split("whiteIp=")[1].split(";")[0];
             HttpUrlConnectionUtil.ips(getIpUrl);
         } catch (Exception e) {
             System.out.println("参数错误，每个参数后面需要加分号");
@@ -89,7 +87,7 @@ public class Start {
                 //获取京东时间
                 JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://a.jd.com//ajax/queryServerData.html"));
                 Long serverTime = Long.valueOf(jdTime.get("serverTime").toString());
-                if (startTime >= serverTime) {
+                if (startTime >= serverTime + 100) {
                     System.out.println("正在等待抢购时间");
                     Thread.sleep(100);
                 } else {

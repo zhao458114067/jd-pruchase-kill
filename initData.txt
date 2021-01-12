@@ -7,8 +7,6 @@ eid=W2HEXZSRULGOBXAMFF6J44UTIGCP5QGKRQO5M7KZHYUAU7RT2JBTXRG2ZNRUWHKYX2PHNKRJI2KO
 fp=4ce08fcab2f99f47724c9c7cdf771d9f;
 //抢购数量
 ok=2;
-//获取ip代理,可以不填，但是必须有分号
+//获取ip代理,不会用不要填，但是必须保留分号
 getIpUrl=http://api.xiequ.cn/VAD/GetIp.aspx?act=get&num=200&time=30&plat=1&re=1&type=2&so=1&ow=1&spl=1&addr=&db=1;
-//获取ip代理白名单ip,可以不填，但是必须有分号
-whiteIp=;
 
