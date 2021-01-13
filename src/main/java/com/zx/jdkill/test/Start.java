@@ -50,8 +50,8 @@ public class Start {
         //判断是否开始抢购
         judgePruchase();
         //开始抢购
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(15, 20, 1000, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>(), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
-        for (int i = 0; i < 15; i++) {
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(10, 15, 1000, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>(), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
+        for (int i = 0; i < 5; i++) {
             threadPoolExecutor.execute(new RushToPurchase());
         }
         new RushToPurchase().run();
@@ -83,13 +83,13 @@ public class Start {
             String startDate = buyDate.split("-202")[0] + ":00";
             Long startTime = HttpUrlConnectionUtil.dateToTime(startDate);
             //开始抢购
+            //获取京东时间
+            JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://a.jd.com//ajax/queryServerData.html"));
+            Long serverTime = Long.valueOf(jdTime.get("serverTime").toString());
+            Long cha = serverTime + 10 - System.currentTimeMillis();
             while (true) {
-                //获取京东时间
-                JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://a.jd.com//ajax/queryServerData.html"));
-                Long serverTime = Long.valueOf(jdTime.get("serverTime").toString());
-                if (startTime >= serverTime + 100) {
+                if (System.currentTimeMillis() + cha < startTime) {
                     System.out.println("正在等待抢购时间");
-                    Thread.sleep(100);
                 } else {
                     break;
                 }
