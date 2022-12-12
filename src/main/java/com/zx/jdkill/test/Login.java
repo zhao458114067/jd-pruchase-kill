@@ -25,27 +25,27 @@ public class Login {
 
     public static void Login() throws IOException, URISyntaxException, InterruptedException {
         JSONObject headers = new JSONObject();
-        headers.put(Start.headerAgent, Start.headerAgentArg);
-        headers.put(Start.Referer, Start.RefererArg);
+        headers.put(Start.HEADER_AGENT, Start.HEADER_AGENT_ARG);
+        headers.put(Start.REFERER, Start.REFERER_ARG);
         //获取二维码
-        Long now = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
         HttpUrlConnectionUtil.getQCode(headers, "https://qr.m.jd.com/show?appid=133&size=147&t=" + now);
         //打开二维码
         Runtime.getRuntime().exec("cmd /c QCode.png");
         URI url = new URI("https://qr.m.jd.com/show?appid=133&size=147&t=" + now);
         Map<String, List<String>> stringListMap = new HashMap<String, List<String>>();
         stringListMap = Start.manager.get(url, requestHeaders);
-        List cookieList = stringListMap.get("Cookie");
-        String cookies = cookieList.get(0).toString();
+        List<String> cookieList = stringListMap.get("Cookie");
+        String cookies = cookieList.get(0);
         String token = cookies.split("wlfstk_smdl=")[1];
         headers.put("Cookie", cookies);
         //判断是否扫二维码
         while (true) {
             String checkUrl = "https://qr.m.jd.com/check?appid=133&callback=jQuery" + (int) ((Math.random() * (9999999 - 1000000 + 1)) + 1000000) + "&token=" + token + "&_=" + System.currentTimeMillis();
             String qrCode = HttpUrlConnectionUtil.get(headers, checkUrl);
-            if (qrCode.indexOf("二维码未扫描") != -1) {
+            if (qrCode.contains("二维码未扫描")) {
                 System.out.println("二维码未扫描，请扫描二维码登录");
-            } else if (qrCode.indexOf("请手机客户端确认登录") != -1) {
+            } else if (qrCode.contains("请手机客户端确认登录")) {
                 System.out.println("请手机客户端确认登录");
             } else {
                 ticket = qrCode.split("\"ticket\" : \"")[1].split("\"\n" +
@@ -64,8 +64,8 @@ public class Login {
         headers.put("Cookie", cookies);
     }
 
-    public static void close() throws IOException, InterruptedException {
-//        通过窗口标题获取窗口句柄
+    public static void close()  {
+        // 通过窗口标题获取窗口句柄
         WinDef.HWND hWnd;
         final User32 user32 = User32.INSTANCE;
         user32.EnumWindows(new WinUser.WNDENUMPROC() {
@@ -74,8 +74,6 @@ public class Login {
                 char[] windowText = new char[512];
                 user32.GetWindowText(hWnd, windowText, 512);
                 String wText = Native.toString(windowText);
-                // get rid of this if block if you want all windows regardless of whether
-                // or not they have text
                 if (wText.isEmpty()) {
                     return true;
                 }

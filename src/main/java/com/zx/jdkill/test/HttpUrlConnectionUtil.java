@@ -16,7 +16,6 @@ import java.util.Iterator;
  * @date: 2021/1/5 22:26
  */
 public class HttpUrlConnectionUtil {
-    static ArrayList<String> ips = new ArrayList();
 
     /**
      * get请求
@@ -157,48 +156,4 @@ public class HttpUrlConnectionUtil {
         }
         return null;
     }
-
-    public static ArrayList<String> ips(String getIpUrl) throws IOException {
-        if ("".equals(getIpUrl)) {
-            return ips;
-        }
-        String path = getIpUrl;// 要获得html页面内容的地址
-
-        URL url = new URL(path);// 创建url对象
-
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();// 打开连接
-        conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
-        conn.setRequestProperty("contentType", "GBK"); // 设置url中文参数编码
-
-        conn.setConnectTimeout(5 * 1000);// 请求的时间
-
-        conn.setRequestMethod("GET");// 请求方式
-
-        InputStream inStream = conn.getInputStream();
-        // readLesoSysXML(inStream);
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(inStream, "GBK"));
-        StringBuffer buffer = new StringBuffer();
-        ArrayList<String> ipp = new ArrayList<String>();
-        String line = "";
-        // 读取获取到内容的最后一行,写入
-        while ((line = in.readLine()) != null) {
-            buffer.append(line);
-            ipp.add(line);
-        }
-        String str = buffer.toString();
-//    JSONObject json1 = JSONObject.parseObject(str);
-//    JSONArray jsons =  JSONArray.parseArray(json1.get("data").toString());
-
-//    for(Object json:jsons){
-//        JSONObject ips = JSONObject.parseObject(json.toString());
-//        String ip = ips.get("IP").toString();
-//        System.out.println(ip);
-//        ipp.add(ip);
-//    }
-        ips = ipp;
-        return ipp;
-
-    }
-
 }

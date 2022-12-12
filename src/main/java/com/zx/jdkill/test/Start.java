@@ -2,6 +2,7 @@ package com.zx.jdkill.test;
 
 import com.alibaba.fastjson.JSONObject;
 import com.sun.webkit.network.CookieManager;
+import org.quartz.SchedulerException;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -10,6 +11,7 @@ import java.io.InputStreamReader;
 import java.net.CookieHandler;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -20,10 +22,10 @@ import java.util.concurrent.TimeUnit;
  * @date: 2021/1/8 20:59
  */
 public class Start {
-    final static String headerAgent = "User-Agent";
-    final static String headerAgentArg = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36";
-    final static String Referer = "Referer";
-    final static String RefererArg = "https://passport.jd.com/new/login.aspx";
+    final static String HEADER_AGENT = "User-Agent";
+    final static String HEADER_AGENT_ARG = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36";
+    final static String REFERER = "Referer";
+    final static String REFERER_ARG = "https://passport.jd.com/new/login.aspx";
     //商品id
     static String pid = "";
     //eid
@@ -40,21 +42,11 @@ public class Start {
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException, ParseException {
         initData();
         CookieHandler.setDefault(manager);
-        //获取venderId
-//        String shopDetail = util.get(null, "https://item.jd.com/" + RushToPurchase.pid + ".html");
-//        String venderID = shopDetail.split("isClosePCShow: false,\n" +
-//                "                venderId:")[1].split(",")[0];
-//        RushToPurchase.venderId = venderID;
         //登录
         Login.Login();
-        //判断是否开始抢购
+
+        // 设置目标任务
         judgePruchase();
-        //开始抢购
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(10, 15, 1000, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<Runnable>(), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
-        for (int i = 0; i < 5; i++) {
-            threadPoolExecutor.execute(new RushToPurchase());
-        }
-        new RushToPurchase().run();
     }
 
     public static void initData() throws IOException {
@@ -65,34 +57,42 @@ public class Start {
             fp = fileData.split("fp=")[1].split(";")[0];
             ok = Integer.valueOf(fileData.split("ok=")[1].split(";")[0]);
             getIpUrl = fileData.split("getIpUrl=")[1].split(";")[0];
-            HttpUrlConnectionUtil.ips(getIpUrl);
         } catch (Exception e) {
             System.out.println("参数错误，每个参数后面需要加分号");
         }
 
     }
 
-    public static void judgePruchase() throws IOException, ParseException, InterruptedException {
+    public static void judgePruchase() throws IOException, ParseException {
         //获取开始时间
         JSONObject headers = new JSONObject();
-        headers.put(Start.headerAgent, Start.headerAgentArg);
-        headers.put(Start.Referer, Start.RefererArg);
+        headers.put(HEADER_AGENT, HEADER_AGENT_ARG);
+        headers.put(REFERER, REFERER_ARG);
         JSONObject shopDetail = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://item-soa.jd.com/getWareBusiness?skuId=" + pid));
+        BaseQuartzManager baseQuartzManager;
+        try {
+            baseQuartzManager = new BaseQuartzManager();
+        } catch (SchedulerException e) {
+            throw new RuntimeException(e);
+        }
         if (shopDetail.get("yuyueInfo") != null) {
             String buyDate = JSONObject.parseObject(shopDetail.get("yuyueInfo").toString()).get("buyTime").toString();
             String startDate = buyDate.split("-202")[0] + ":00";
-            Long startTime = HttpUrlConnectionUtil.dateToTime(startDate);
-            //开始抢购
+            long startTime = HttpUrlConnectionUtil.dateToTime(startDate);
             //获取京东时间
-            JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://a.jd.com//ajax/queryServerData.html"));
-            Long serverTime = Long.valueOf(jdTime.get("serverTime").toString());
-            Long cha = serverTime + 10 - System.currentTimeMillis();
-            while (true) {
-                if (System.currentTimeMillis() + cha < startTime) {
-                    System.out.println("正在等待抢购时间");
-                } else {
-                    break;
-                }
+            JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5"));
+            long serverTime = Long.parseLong(jdTime.get("currentTime2").toString());
+            long localStartTime = startTime - serverTime + System.currentTimeMillis();
+            String cornExpression = TimeUtil.formatDateByPattern(new Date(localStartTime), TimeUtil.PATTERN_TARGET_TIME);
+
+            for (int i = 0; i < 100; i++) {
+                baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
+                        cornExpression, new JSONObject(), true);
+            }
+        } else {
+            for (int i = 0; i < 5; i++) {
+                baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
+                        TimeUtil.formatDateByPattern(new Date(), TimeUtil.PATTERN_TARGET_TIME), new JSONObject(), true);
             }
         }
     }
