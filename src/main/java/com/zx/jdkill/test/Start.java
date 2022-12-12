@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Start {
     final static String HEADER_AGENT = "User-Agent";
-    final static String HEADER_AGENT_ARG = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36";
+    final static String HEADER_AGENT_ARG = "Mozilla/5.0 (Linux; Android 10; CLT-AL00 Build/HUAWEICLT-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/76.0.3809.89 Mobile Safari/537.36 T7/11.20 SP-engine/2.16.0 baiduboxapp/11.20.0.14 (Baidu; P1 10) NABar/1.0";
     final static String REFERER = "Referer";
     final static String REFERER_ARG = "https://passport.jd.com/new/login.aspx";
     //商品id
@@ -85,7 +85,7 @@ public class Start {
             long localStartTime = startTime - serverTime + System.currentTimeMillis();
             String cornExpression = TimeUtil.formatDateByPattern(new Date(localStartTime), TimeUtil.PATTERN_TARGET_TIME);
 
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 10000; i++) {
                 baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
                         cornExpression, new JSONObject(), true);
             }
