@@ -20,9 +20,9 @@ eid以及fp在订单结算页面 https://trade.jd.com/shopping/order/getOrderInf
 
 F12打开console，输入_JdTdudfp
 
-![1](https://github.com/zhao458114067/Jd-Pruchase-Kill/blob/dev_zx/1.png?raw=true)
+![1](https://github.com/zhao458114067/Jd-Pruchase-Kill/blob/dev/1.png?raw=true)
 
 或者F12打开Sources，添加_JdTdudfp参数
 
-![2](https://github.com/zhao458114067/Jd-Pruchase-Kill/blob/dev_zx/2.png?raw=true)
+![2](https://github.com/zhao458114067/Jd-Pruchase-Kill/blob/dev/2.png?raw=true)
 
