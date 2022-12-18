@@ -23,13 +23,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class Start {
     final static String HEADER_AGENT = "User-Agent";
-    final static String HEADER_AGENT_ARG = "Mozilla/5.0 (Linux; Android 10; CLT-AL00 Build/HUAWEICLT-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/76.0.3809.89 Mobile Safari/537.36 T7/11.20 SP-engine/2.16.0 baiduboxapp/11.20.0.14 (Baidu; P1 10) NABar/1.0";
+    final static String HEADER_AGENT_ARG = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36";
     final static String REFERER = "Referer";
     final static String REFERER_ARG = "https://passport.jd.com/new/login.aspx";
     //商品id
     static String pid = "";
     //eid
     static String eid = "";
+    static String payPassword = "";
     //fp
     static String fp = "";
     //抢购数量
@@ -55,8 +56,9 @@ public class Start {
             pid = fileData.split("pid=")[1].split(";")[0];
             eid = fileData.split("eid=")[1].split(";")[0];
             fp = fileData.split("fp=")[1].split(";")[0];
-            ok = Integer.valueOf(fileData.split("ok=")[1].split(";")[0]);
+//            ok = Integer.valueOf(fileData.split("ok=")[1].split(";")[0]);
             getIpUrl = fileData.split("getIpUrl=")[1].split(";")[0];
+            payPassword = fileData.split("payPassword=")[1].split(";")[0];
         } catch (Exception e) {
             System.out.println("参数错误，每个参数后面需要加分号");
         }
@@ -79,15 +81,23 @@ public class Start {
             String buyDate = JSONObject.parseObject(shopDetail.get("yuyueInfo").toString()).get("buyTime").toString();
             String startDate = buyDate.split("-202")[0] + ":00";
             long startTime = HttpUrlConnectionUtil.dateToTime(startDate);
-            //获取京东时间
-            JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5"));
-            long serverTime = Long.parseLong(jdTime.get("currentTime2").toString());
-            long localStartTime = startTime - serverTime + System.currentTimeMillis();
-            String cornExpression = TimeUtil.formatDateByPattern(new Date(localStartTime), TimeUtil.PATTERN_TARGET_TIME);
+            if (startTime <= System.currentTimeMillis()) {
+                for (int i = 0; i < 5; i++) {
+                    baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
+                            TimeUtil.formatDateByPattern(new Date(), TimeUtil.PATTERN_TARGET_TIME), new JSONObject(), true);
+                }
+            }
+            else{
+                //获取京东时间
+                JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5"));
+                long serverTime = Long.parseLong(jdTime.get("currentTime2").toString());
+                long localStartTime = startTime - serverTime + System.currentTimeMillis();
+                String cornExpression = TimeUtil.formatDateByPattern(new Date(localStartTime), TimeUtil.PATTERN_TARGET_TIME);
 
-            for (int i = 0; i < 10000; i++) {
-                baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
-                        cornExpression, new JSONObject(), true);
+                for (int i = 0; i < 100; i++) {
+                    baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
+                            cornExpression, new JSONObject(), true);
+                }
             }
         } else {
             for (int i = 0; i < 5; i++) {
@@ -113,5 +123,42 @@ public class Start {
             line = br.readLine();
         }
         return strSb;
+    }
+
+    /*
+     * 中文转unicode编码
+     */
+    public static String gbEncoding(final String gbString) {
+        char[] utfBytes = gbString.toCharArray();
+        String unicodeBytes = "";
+        for (int i = 0; i < utfBytes.length; i++) {
+            String hexB = Integer.toHexString(utfBytes[i]);
+            if (hexB.length() <= 2) {
+                hexB = "00" + hexB;
+            }
+            unicodeBytes = unicodeBytes + "\\u" + hexB;
+        }
+        return unicodeBytes;
+    }
+    /*
+     * unicode编码转中文
+     */
+    public static String decodeUnicode(final String dataStr) {
+        int start = 0;
+        int end = 0;
+        final StringBuffer buffer = new StringBuffer();
+        while (start > -1) {
+            end = dataStr.indexOf("\\u", start + 2);
+            String charStr = "";
+            if (end == -1) {
+                charStr = dataStr.substring(start + 2, dataStr.length());
+            } else {
+                charStr = dataStr.substring(start + 2, end);
+            }
+            char letter = (char) Integer.parseInt(charStr, 16); // 16进制parse整形字符串。
+            buffer.append(new Character(letter).toString());
+            start = end;
+        }
+        return buffer.toString();
     }
 }

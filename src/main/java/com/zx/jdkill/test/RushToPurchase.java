@@ -50,7 +50,7 @@ public class RushToPurchase implements Job {
         headers.put(Start.HEADER_AGENT, Start.HEADER_AGENT_ARG);
         headers.put(Start.REFERER, Start.REFERER_ARG);
 
-        //抢购
+        // 加入购物车
         String gate = null;
         List<String> cookie = new ArrayList<>();
         try {
@@ -70,6 +70,7 @@ public class RushToPurchase implements Job {
         headers.put("Cookie", cookie.get(0).toString());
         try {
             String orderInfo = HttpUrlConnectionUtil.get(headers, "https://trade.jd.com/shopping/order/getOrderInfo.action");
+            System.out.println(orderInfo);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,6 +79,7 @@ public class RushToPurchase implements Job {
         JSONObject subData = new JSONObject();
         headers = new JSONObject();
         subData.put("overseaPurchaseCookies", "");
+        subData.put("submitOrderParam.payPassword", Start.gbEncoding(Start.payPassword).replace("\\", ""));
         subData.put("vendorRemarks", "[]");
         subData.put("submitOrderParam.sopNotPutInvoice", "false");
         subData.put("submitOrderParam.ignorePriceChange", "1");
@@ -110,7 +112,7 @@ public class RushToPurchase implements Job {
             if (!StringUtils.isEmpty(Start.getIpUrl)) {
                 setIpProxy();
             }
-            submitOrder = HttpUrlConnectionUtil.post(headers, "https://trade.jd.com/shopping/order/submitOrder.action", null);
+            submitOrder = HttpUrlConnectionUtil.post(headers, "https://trade.jd.com/shopping/order/submitOrder.action", subData);
         } catch (IOException e) {
             e.printStackTrace();
         }
