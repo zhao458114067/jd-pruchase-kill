@@ -79,15 +79,22 @@ public class Start {
             String buyDate = JSONObject.parseObject(shopDetail.get("yuyueInfo").toString()).get("buyTime").toString();
             String startDate = buyDate.split("-202")[0] + ":00";
             long startTime = HttpUrlConnectionUtil.dateToTime(startDate);
-            //获取京东时间
-            JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5"));
-            long serverTime = Long.parseLong(jdTime.get("currentTime2").toString());
-            long localStartTime = startTime - serverTime + System.currentTimeMillis();
-            String cornExpression = TimeUtil.formatDateByPattern(new Date(localStartTime), TimeUtil.PATTERN_TARGET_TIME);
-
-            for (int i = 0; i < 10000; i++) {
-                baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
-                        cornExpression, new JSONObject(), true);
+            if (startTime <= System.currentTimeMillis()) {
+                for (int i = 0; i < 5; i++) {
+                    baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
+                            TimeUtil.formatDateByPattern(new Date(), TimeUtil.PATTERN_TARGET_TIME), new JSONObject(), true);
+                }
+            } else {
+                //获取京东时间
+                JSONObject jdTime = JSONObject.parseObject(HttpUrlConnectionUtil.get(headers, "https://api.m.jd.com/client.action?functionId=queryMaterialProducts&client=wh5"));
+                long serverTime = Long.parseLong(jdTime.get("currentTime2").toString());
+                for (int i = 0; i < 5; i++) {
+                    int random = (int) (Math.random() * (40 - 5 + 1)) + 5;
+                    long localStartTime = startTime - serverTime + System.currentTimeMillis() - random;
+                    String cornExpression = TimeUtil.formatDateByPattern(new Date(localStartTime), TimeUtil.PATTERN_TARGET_TIME);
+                    baseQuartzManager.createJob(RushToPurchase.class, "RushToPurchase-" + i, "RushToPurchase",
+                            cornExpression, new JSONObject(), true);
+                }
             }
         } else {
             for (int i = 0; i < 5; i++) {
